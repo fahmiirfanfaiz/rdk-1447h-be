@@ -25,12 +25,6 @@ async function connectDB() {
       console.warn("⚠️ MongoDB disconnected");
     });
 
-    // process.on("SIGINT", async () => {
-    //   await mongoose.connection.close();
-    //   console.log("🔌 MongoDB connection closed due to app termination");
-    //   process.exit(0);
-    // });
-
     return true;
   } catch (error) {
     console.error("❌ Error connecting to MongoDB:", error.message);

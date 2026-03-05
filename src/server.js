@@ -4,11 +4,15 @@ const port = process.env.PORT || 5000;
 const app = express();
 const connectDB = require("./configs/db");
 const mongoose = require("mongoose");
+const articleRoutes = require("./routes/articleRoute");
+const donationRoutes = require("./routes/donationRoutes");
 
 process.env.TZ = "Asia/Jakarta";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(articleRoutes);
+app.use(donationRoutes);
 
 process.on("SIGINT", async () => {
   try {
