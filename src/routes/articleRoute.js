@@ -4,7 +4,11 @@ const articleController = require("../controllers/articleController");
 const upload = require("../configs/multer");
 
 // CREATE a new article (multipart/form-data, field gambar: 'image')
-router.post("/articles", upload.single("image"), articleController.createArticle,);
+router.post(
+  "/articles",
+  upload.single("image"),
+  articleController.createArticle,
+);
 
 // GET all articles
 router.get("/articles", articleController.getAllArticles);

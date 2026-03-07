@@ -5,8 +5,15 @@ const base64FileService = require("../services/Base64FileService");
 // CREATE a new article (image opsional via multipart/form-data, field: 'image')
 exports.createArticle = async (req, res) => {
   try {
-    const { title, content, summary, status, categoryId, publishedDate, writer } =
-      req.body;
+    const {
+      title,
+      content,
+      summary,
+      status,
+      categoryId,
+      publishedDate,
+      writer,
+    } = req.body;
 
     // Validate that the referenced category exists
     const categoryExists = await Category.exists({ _id: categoryId });
@@ -50,8 +57,10 @@ exports.createArticle = async (req, res) => {
 // GET all articles — base64Data excluded to keep response size small
 exports.getAllArticles = async (req, res) => {
   try {
-    const articles = await Article.find({}, { "image.base64Data": 0 })
-      .populate("category", "name");
+    const articles = await Article.find({}, { "image.base64Data": 0 }).populate(
+      "category",
+      "name",
+    );
     if (articles.length === 0) {
       return res
         .status(404)
@@ -126,8 +135,15 @@ exports.getArticleImage = async (req, res) => {
 exports.updateArticle = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, summary, status, categoryId, publishedDate, writer } =
-      req.body;
+    const {
+      title,
+      content,
+      summary,
+      status,
+      categoryId,
+      publishedDate,
+      writer,
+    } = req.body;
 
     // Validate category if a new one is being set
     if (categoryId !== undefined) {

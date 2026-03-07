@@ -24,13 +24,11 @@ exports.createGallery = async (req, res) => {
     const savedGallery = await newGallery.save();
     res.status(201).json({ success: true, data: savedGallery });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error creating gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error creating gallery record",
+      error: error.message,
+    });
   }
 };
 
@@ -46,13 +44,11 @@ exports.getAllGalleries = async (req, res) => {
     }
     res.status(200).json({ success: true, data: galleries });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching gallery records",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching gallery records",
+      error: error.message,
+    });
   }
 };
 
@@ -68,13 +64,11 @@ exports.getGalleryById = async (req, res) => {
     }
     res.status(200).json({ success: true, data: gallery });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching gallery record",
+      error: error.message,
+    });
   }
 };
 
@@ -113,13 +107,11 @@ exports.getGalleryImage = async (req, res) => {
     res.set("Content-Disposition", `inline; filename="${result.originalName}"`);
     res.send(result.fileBuffer);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error retrieving gallery image",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error retrieving gallery image",
+      error: error.message,
+    });
   }
 };
 
@@ -157,13 +149,11 @@ exports.updateGallery = async (req, res) => {
     }
     res.status(200).json({ success: true, data: updatedGallery });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error updating gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error updating gallery record",
+      error: error.message,
+    });
   }
 };
 
@@ -181,12 +171,10 @@ exports.deleteGallery = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Gallery record deleted successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error deleting gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting gallery record",
+      error: error.message,
+    });
   }
 };
