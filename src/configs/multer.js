@@ -2,11 +2,11 @@ const multer = require("multer");
 const path = require("path");
 const fileValidationService = require("../utils/FileValidationService");
 const fs = require("fs");
-const uploadDir = "uploads/gallery";
+// const uploadDir = "uploads/gallery";
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
