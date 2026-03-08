@@ -145,4 +145,5 @@ vite.config.ts.timestamp-*
 .vercel.json
 
 # file gallery
-uploads/
+uploads/gallery/*
+!uploads/gallery/.gitkeep
