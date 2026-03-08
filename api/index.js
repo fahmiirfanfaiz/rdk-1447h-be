@@ -5,6 +5,7 @@ const articleRoutes = require("../src/routes/articleRoute");
 const categoryRoutes = require("../src/routes/categoryRoute");
 const donationRoutes = require("../src/routes/donationRoutes");
 const galleryRoutes = require("../src/routes/galleryRoutes");
+const authRoutes = require("../src/routes/authRoutes");
 const cors = require("cors");
 
 process.env.TZ = "Asia/Jakarta";
@@ -35,6 +36,7 @@ app.use(articleRoutes);
 app.use(categoryRoutes);
 app.use(donationRoutes);
 app.use(galleryRoutes);
+app.use(authRoutes);
 
 // Health check endpoint
 app.get("/", (req, res) => {
