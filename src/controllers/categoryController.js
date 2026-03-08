@@ -1,5 +1,6 @@
 const Category = require("../models/categoryModel");
 const Article = require("../models/articleModel");
+const Gallery = require("../models/galleryModel");
 
 // CREATE a new category
 exports.createCategory = async (req, res) => {
@@ -86,12 +87,20 @@ exports.deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Guard: prevent deletion if the category is referenced by any article
-    const articleCount = await Article.countDocuments({ category: id });
-    if (articleCount > 0) {
+    // Guard: prevent deletion if the category is referenced by any article or gallery
+    const [articleCount, galleryCount] = await Promise.all([
+      Article.countDocuments({ category: id }),
+      Gallery.countDocuments({ category: id }),
+    ]);
+
+    const blockers = [];
+    if (articleCount > 0) blockers.push(`${articleCount} article(s)`);
+    if (galleryCount > 0) blockers.push(`${galleryCount} gallery record(s)`);
+
+    if (blockers.length > 0) {
       return res.status(409).json({
         success: false,
-        message: `Category cannot be deleted because it is assigned to ${articleCount} article(s). Reassign or delete those articles first.`,
+        message: `Category cannot be deleted because it is assigned to ${blockers.join(" and ")}. Reassign or delete those records first.`,
       });
     }
 

@@ -7,14 +7,14 @@ const imageSchema = new Schema(
     mimeType: { type: String, required: true },
     fileExtension: { type: String, required: true },
     fileSize: { type: Number, required: true },
-    filePath:     { type: String, required: true },
+    filePath: { type: String, required: true },
   },
   { _id: false },
 );
 
 const gallerySchema = new Schema(
   {
-    categories: { type: String, required: true },
+    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     images: { type: [imageSchema], default: [] },
   },
   { timestamps: true },

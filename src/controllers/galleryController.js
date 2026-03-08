@@ -1,11 +1,21 @@
 const path = require("path");
 const fs = require("fs");
 const Gallery = require("../models/galleryModel");
+const Category = require("../models/categoryModel");
 
 // CREATE a new gallery record
 exports.createGallery = async (req, res) => {
   try {
-    const { categories } = req.body;
+    const { categoryId } = req.body;
+
+    // Validate that the referenced category exists
+    const categoryExists = await Category.exists({ _id: categoryId });
+    if (!categoryExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Category not found. Provide a valid categoryId.",
+      });
+    }
 
     const images = [];
     if (req.files && req.files.length > 0) {
@@ -20,8 +30,9 @@ exports.createGallery = async (req, res) => {
       }
     }
 
-    const newGallery = new Gallery({ categories, images });
+    const newGallery = new Gallery({ category: categoryId, images });
     const savedGallery = await newGallery.save();
+    await savedGallery.populate("category", "name");
     res.status(201).json({ success: true, data: savedGallery });
   } catch (error) {
     res.status(500).json({
@@ -35,7 +46,7 @@ exports.createGallery = async (req, res) => {
 // GET all gallery records
 exports.getAllGalleries = async (req, res) => {
   try {
-    const galleries = await Gallery.find();
+    const galleries = await Gallery.find().populate("category", "name");
     if (galleries.length === 0) {
       return res
         .status(404)
@@ -55,7 +66,7 @@ exports.getAllGalleries = async (req, res) => {
 exports.getGalleryById = async (req, res) => {
   try {
     const { id } = req.params;
-    const gallery = await Gallery.findById(id);
+    const gallery = await Gallery.findById(id).populate("category", "name");
     if (!gallery) {
       return res
         .status(404)
@@ -96,10 +107,15 @@ exports.getGalleryImage = async (req, res) => {
     const imageDoc = gallery.images[imgIndex];
     const absolutePath = path.resolve(imageDoc.filePath);
     if (!fs.existsSync(absolutePath)) {
-      return res.status(404).json({ success: false, message: "File tidak ditemukan di server" });
+      return res
+        .status(404)
+        .json({ success: false, message: "File tidak ditemukan di server" });
     }
     res.set("Content-Type", imageDoc.mimeType);
-    res.set("Content-Disposition", `inline; filename="${imageDoc.originalName}"`);
+    res.set(
+      "Content-Disposition",
+      `inline; filename="${imageDoc.originalName}"`,
+    );
     res.sendFile(absolutePath);
   } catch (error) {
     res.status(500).json({
@@ -116,9 +132,21 @@ exports.getGalleryImage = async (req, res) => {
 exports.updateGallery = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, categories } = req.body;
+    const { title, categoryId } = req.body;
 
-    const updateData = { title, categories };
+    // Validate category if a new one is being set
+    if (categoryId !== undefined) {
+      const categoryExists = await Category.exists({ _id: categoryId });
+      if (!categoryExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Category not found. Provide a valid categoryId.",
+        });
+      }
+    }
+
+    const updateData = { title };
+    if (categoryId !== undefined) updateData.category = categoryId;
     if (req.files && req.files.length > 0) {
       // Hapus file lama dari disk
       const oldGallery = await Gallery.findById(id);
@@ -144,7 +172,7 @@ exports.updateGallery = async (req, res) => {
 
     const updatedGallery = await Gallery.findByIdAndUpdate(id, updateData, {
       new: true,
-    });
+    }).populate("category", "name");
     if (!updatedGallery) {
       return res
         .status(404)
