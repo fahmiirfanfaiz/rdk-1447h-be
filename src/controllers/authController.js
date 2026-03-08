@@ -9,7 +9,7 @@ const register = async (req, res) => {
     const existing = await findAdminByEmail(email);
 
     if (existing) {
-      return res.status(400).json({ message: "Admin sudah ada." });
+      return res.status(400).json({ message: "The admin is available." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -20,7 +20,7 @@ const register = async (req, res) => {
     });
 
     res.json({
-      message: "Admin berhasil dibuat",
+      message: "The admin has been successfully created.",
       admin,
     });
   } catch (err) {
@@ -35,13 +35,13 @@ const login = async (req, res) => {
     const admin = await findAdminByEmail(email);
 
     if (!admin) {
-      return res.status(401).json({ message: "Email atau password salah" });
+      return res.status(401).json({ message: "incorrect email or password" });
     }
 
     const match = await bcrypt.compare(password, admin.password);
 
     if (!match) {
-      return res.status(401).json({ message: "Email atau password salah" });
+      return res.status(401).json({ message: "incorrect email or password" });
     }
 
     const token = jwt.sign(
@@ -54,7 +54,7 @@ const login = async (req, res) => {
     );
 
     res.json({
-      message: "Login berhasil",
+      message: "Login succesfull",
       token,
     });
   } catch (err) {
