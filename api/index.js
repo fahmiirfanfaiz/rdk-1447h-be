@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const connectDB = require("../src/configs/db");
 const articleRoutes = require("../src/routes/articleRoute");
+const categoryRoutes = require("../src/routes/categoryRoute");
 const donationRoutes = require("../src/routes/donationRoutes");
 const galleryRoutes = require("../src/routes/galleryRoutes");
 const authRoutes = require("../src/routes/authRoutes");
@@ -32,6 +33,7 @@ app.use(async (req, res, next) => {
 
 // Routes
 app.use(articleRoutes);
+app.use(categoryRoutes);
 app.use(donationRoutes);
 app.use(galleryRoutes);
 app.use(authRoutes);

@@ -1,10 +1,12 @@
 require("dotenv").config();
 const express = require("express");
+const path = require("path");
 const port = process.env.PORT || 5000;
 const app = express();
 const connectDB = require("./configs/db");
 const mongoose = require("mongoose");
 const articleRoutes = require("./routes/articleRoute");
+const categoryRoutes = require("./routes/categoryRoute");
 const donationRoutes = require("./routes/donationRoutes");
 const galleryRoutes = require("./routes/galleryRoutes");
 const authRoutes = require("../src/routes/authRoutes");
@@ -13,7 +15,9 @@ process.env.TZ = "Asia/Jakarta";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(articleRoutes);
+app.use(categoryRoutes);
 app.use(donationRoutes);
 app.use(galleryRoutes);
 app.use(authRoutes);

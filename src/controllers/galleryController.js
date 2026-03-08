@@ -1,7 +1,8 @@
+const path = require("path");
+const fs = require("fs");
 const Gallery = require("../models/galleryModel");
-const base64FileService = require("../services/Base64FileService");
 
-// CREATE a new gallery record (gambar opsional via multipart/form-data, field: 'images')
+// CREATE a new gallery record
 exports.createGallery = async (req, res) => {
   try {
     const { categories } = req.body;
@@ -9,14 +10,13 @@ exports.createGallery = async (req, res) => {
     const images = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        const imageData = base64FileService.processImageForStorage(
-          file.buffer,
-          {
-            originalName: file.originalname,
-            mimeType: file.mimetype,
-          },
-        );
-        images.push(imageData);
+        images.push({
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          fileExtension: path.extname(file.originalname),
+          fileSize: file.size,
+          filePath: file.path,
+        });
       }
     }
 
@@ -24,13 +24,11 @@ exports.createGallery = async (req, res) => {
     const savedGallery = await newGallery.save();
     res.status(201).json({ success: true, data: savedGallery });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error creating gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error creating gallery record",
+      error: error.message,
+    });
   }
 };
 
@@ -45,13 +43,11 @@ exports.getAllGalleries = async (req, res) => {
     }
     res.status(200).json({ success: true, data: galleries });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching gallery records",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching gallery records",
+      error: error.message,
+    });
   }
 };
 
@@ -67,17 +63,15 @@ exports.getGalleryById = async (req, res) => {
     }
     res.status(200).json({ success: true, data: gallery });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching gallery record",
+      error: error.message,
+    });
   }
 };
 
-// GET satu gambar dari gallery sebagai binary — index berbasis 0
+// GET satu gambar dari gallery sebagai file — index berbasis 0
 exports.getGalleryImage = async (req, res) => {
   try {
     const { id, index } = req.params;
@@ -100,30 +94,24 @@ exports.getGalleryImage = async (req, res) => {
       });
     }
     const imageDoc = gallery.images[imgIndex];
-    const result = base64FileService.processImageForDisplay(
-      imageDoc.base64Data,
-      {
-        originalName: imageDoc.originalName,
-        mimeType: imageDoc.mimeType,
-        fileHash: imageDoc.fileHash,
-      },
-    );
-    res.set("Content-Type", result.mimeType);
-    res.set("Content-Disposition", `inline; filename="${result.originalName}"`);
-    res.send(result.fileBuffer);
+    const absolutePath = path.resolve(imageDoc.filePath);
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ success: false, message: "File tidak ditemukan di server" });
+    }
+    res.set("Content-Type", imageDoc.mimeType);
+    res.set("Content-Disposition", `inline; filename="${imageDoc.originalName}"`);
+    res.sendFile(absolutePath);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error retrieving gallery image",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error retrieving gallery image",
+      error: error.message,
+    });
   }
 };
 
 // UPDATE a gallery record by ID
-// Jika gambar baru dikirim → mengganti semua gambar lama.
+// Jika gambar baru dikirim → mengganti semua gambar lama (file lama dihapus dari disk).
 // Jika tidak ada gambar baru → gambar lama tetap tersimpan.
 exports.updateGallery = async (req, res) => {
   try {
@@ -132,16 +120,24 @@ exports.updateGallery = async (req, res) => {
 
     const updateData = { title, categories };
     if (req.files && req.files.length > 0) {
+      // Hapus file lama dari disk
+      const oldGallery = await Gallery.findById(id);
+      if (oldGallery && oldGallery.images) {
+        for (const img of oldGallery.images) {
+          const absPath = path.resolve(img.filePath);
+          if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
+        }
+      }
+
       const newImages = [];
       for (const file of req.files) {
-        const imageData = base64FileService.processImageForStorage(
-          file.buffer,
-          {
-            originalName: file.originalname,
-            mimeType: file.mimetype,
-          },
-        );
-        newImages.push(imageData);
+        newImages.push({
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          fileExtension: path.extname(file.originalname),
+          fileSize: file.size,
+          filePath: file.path,
+        });
       }
       updateData.images = newImages;
     }
@@ -156,36 +152,42 @@ exports.updateGallery = async (req, res) => {
     }
     res.status(200).json({ success: true, data: updatedGallery });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error updating gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error updating gallery record",
+      error: error.message,
+    });
   }
 };
 
-// DELETE a gallery record by ID
+// DELETE a gallery record by ID — hapus file dari disk juga
 exports.deleteGallery = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedGallery = await Gallery.findByIdAndDelete(id);
-    if (!deletedGallery) {
+    const gallery = await Gallery.findById(id);
+    if (!gallery) {
       return res
         .status(404)
         .json({ success: false, message: "Gallery record not found" });
     }
+
+    // Hapus file dari disk
+    if (gallery.images) {
+      for (const img of gallery.images) {
+        const absPath = path.resolve(img.filePath);
+        if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
+      }
+    }
+
+    await Gallery.findByIdAndDelete(id);
     res
       .status(200)
       .json({ success: true, message: "Gallery record deleted successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error deleting gallery record",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting gallery record",
+      error: error.message,
+    });
   }
 };
