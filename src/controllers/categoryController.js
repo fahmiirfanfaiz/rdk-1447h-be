@@ -5,8 +5,8 @@ const Gallery = require("../models/galleryModel");
 // CREATE a new category
 exports.createCategory = async (req, res) => {
   try {
-    const { name } = req.body;
-    const newCategory = new Category({ name });
+    const { name, type } = req.body;
+    const newCategory = new Category({ name, type });
     const savedCategory = await newCategory.save();
     res.status(201).json({ success: true, data: savedCategory });
   } catch (error) {
@@ -61,10 +61,10 @@ exports.getCategoryById = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, type } = req.body;
     const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      { name },
+      { name, type },
       { new: true, runValidators: true },
     );
     if (!updatedCategory) {
